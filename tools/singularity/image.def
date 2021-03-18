@@ -1,0 +1,37 @@
+Bootstrap: docker
+From: ubuntu:18.04
+
+%post
+    set -ex
+
+    apt-get -y update
+    apt-get -y install build-essential wget autoconf gfortran libnetcdf-dev libnetcdff-dev
+
+    CONDA_ROOT=/miniconda
+    cd /tmp
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+    bash miniconda.sh -b -p ${CONDA_ROOT}
+    rm miniconda.sh
+    PATH=${PATH}:${CONDA_ROOT}/bin
+    conda init bash
+
+    conda create -n radiation -c defaults \
+        python=3.8 python=3.8 numpy=1.19.2 scipy=1.6.0 \
+        xarray=0.16.2 pandas=1.2.1 netcdf4=1.5.3 matplotlib=3.3.2 seaborn=0.11.1
+
+    # https://github.com/ContinuumIO/docker-images/issues/89#issuecomment-467287039
+    . ${CONDA_ROOT}/etc/profile.d/conda.sh
+    conda activate radiation
+
+    # Install pip packages
+    pip --no-cache-dir install notebook==6.2.0 tensorflow==2.4.1 \
+        scikit-learn==0.24.1 pyvinecopulib==0.5.5 synthia==0.3.0 plotly==4.14.3
+
+    # Cleanup
+    conda clean -a
+    rm -rf /var/lib/apt/lists/*
+
+# Available at runtime, not during build (= %post section).
+%environment
+    export CONDA_ROOT=/miniconda
+    export PATH=${PATH}:${CONDA_ROOT}/bin

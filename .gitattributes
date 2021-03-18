@@ -1,0 +1,5 @@
+# https://stackoverflow.com/a/58004619
+*.ipynb filter=strip-notebook-output
+
+* text=auto
+*.sh text eol=lf
