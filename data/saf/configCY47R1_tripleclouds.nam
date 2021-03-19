@@ -50,7 +50,7 @@ sw_entrapment_name      = "Explicit",     ! Zero, Edge-only, Explicit, Non-fract
 ! Separate verbosity specified for setup and ordinary execution
 iverbose    	   	= 1, 
 iverbosesetup  	   	= 3, 
-use_aerosols		= false,           ! Include aerosols in radiation calculations?
+use_aerosols		= true,           ! Include aerosols in radiation calculations?
 do_save_spectral_flux   = false,           ! Save spectral fluxes in output file?
 do_save_gpoint_flux     = false,           ! Save fluxes per g-point in output file?
 do_lw_derivatives       = false,            ! Hogan-Bozzo style derivatives for approx updates

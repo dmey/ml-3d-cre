@@ -65,7 +65,7 @@ do_lw_cloud_scattering = true,        ! Clouds scatter in the longwave?
 !
 ! AEROSOLS
 !
-use_aerosols             = false,      ! Radiation sees aerosols?
+use_aerosols             = true,      ! Radiation sees aerosols?
 do_lw_aerosol_scattering = false,     ! Aerosols scatter in the longwave?
 !
 ! 11 IFS aerosol mixing ratios are stored in the ecRad input file: 1-3
