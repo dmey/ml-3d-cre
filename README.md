@@ -1,6 +1,10 @@
 ## Overview
 
-This is the development repository for the paper "[Machine Learning Emulation of 3D Cloud Radiative Effects](TODO)" simply meant as a placeholder. **For the paper's data archive that includes model outputs and the [Singularity](https://sylabs.io/singularity/) image, please refer to the [archive on Zenodo](TODO) instead**. For the Python tool used to generate the synthetic data, please refer to the [Synthia repository](https://github.com/dmey/synthia).
+This is the development repository for the paper "[Machine Learning Emulation of 3D Cloud Radiative Effects](https://arxiv.org/abs/2103.11919)" simply meant as a placeholder.
+
+**For the paper's data archive that includes all model outputs and the [Singularity](https://sylabs.io/singularity/) image, please refer to the [archive on Zenodo](https://doi.org/10.5281/zenodo.4625414) instead**.
+
+For the Python tool to generate the synthetic data, please refer to the [Synthia repository](https://github.com/dmey/synthia).
 
 
 ## Requirements
