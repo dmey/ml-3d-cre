@@ -25,7 +25,7 @@ From: ubuntu:18.04
 
     # Install pip packages
     pip --no-cache-dir install notebook==6.2.0 tensorflow==2.4.1 \
-        pyvinecopulib==0.5.5 synthia==0.3.0 plotly==4.14.3
+        scikit-learn==0.24.1 pyvinecopulib==0.5.5 synthia==0.3.0 plotly==4.14.3
 
     # Cleanup
     conda clean -a
