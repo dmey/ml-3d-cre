@@ -1122,3 +1122,108 @@ def plt_show_svg(fig_or_path=None):
         svg = f.getvalue()
     svg_url = 'data:image/svg+xml;base64,' + base64.b64encode(svg).decode()
     display(HTML(f'<img src="{svg_url}"></img>'))
+
+
+def rescale(y_pred, pressure_hl, sw_albedo):
+    # SECTION 2: postprocess neural-network prediction to obtain
+    # upwelling and downwelling flux, and consistent heating rate
+
+    y_pred = reverse_levels(y_pred)
+    pressure_hl = reverse_levels(pressure_hl)
+
+    # Work out profile of the divergence of the net flux from the heating
+    # rate
+    g=9.80665
+    Cp=1004.0
+    scaling = 3600.0*24.0*g/Cp
+
+    net_flux_div_lw_from_hr = -y_pred['heating_rate_lw'] * np.diff(pressure_hl) / scaling
+    net_flux_div_sw_from_hr = -y_pred['heating_rate_sw'] * np.diff(pressure_hl) / scaling
+
+    # Work out the total atmospheric divergence from the heating rate =
+    # the sum of the divergence across each layer
+    total_div_sw_from_hr = net_flux_div_sw_from_hr.sum(dim='level')
+    total_div_lw_from_hr = net_flux_div_lw_from_hr.sum(dim='level')
+
+    # Total divergence from scalar fluxes: in longwave we can assume that
+    # the downward flux at TOA is zero, and that the 3D effect on the
+    # upward flux at the surface is also zero. Therefore the net flux
+    # (=down-up) is equal to minus the scalar flux at TOA, and is equal to
+    # the scalar flux at the surface. The total atmospheric flux
+    # divergence is the surface net flux minus the TOA net flux.
+    # Therefore the total atmospheric flux divergence is the sum of the
+    # scalar flux at TOA and surface.
+    total_div_lw_from_scalar_flux = y_pred['flux_scalar_lw'].sel(half_level=0) + \
+                                    y_pred['flux_scalar_lw'].sel(half_level=-1)
+
+    # Scale the net flux divergence profile from the heating rates to
+    # match the total divergence from the scalar fluxes
+    lw_scaling = total_div_lw_from_scalar_flux / total_div_lw_from_hr
+
+    # If the heating rates, and hence the denominator in the previous
+    # formula, are very small then the scaling may be very large - cap it
+    # to lie between 0.5 and 2.
+    lw_scaling = np.maximum(0.5, np.minimum(lw_scaling, 2.0))
+
+    # Apply the scaling
+    net_flux_div_lw = net_flux_div_lw_from_hr * lw_scaling
+
+    # Compute the net flux profile by integrating its divergence, starting
+    # from the known value at the top (=minus the scalar flux )
+    net_flux_lw = -y_pred['flux_scalar_lw'].isel(half_level=0).values[:, np.newaxis] + \
+        np.concatenate([np.zeros((net_flux_div_lw.shape[0], 1)), net_flux_div_lw.cumsum(dim='level')], axis=1)
+    
+    # Reconstruct the up and down from the scalar and the net
+    flux_dn_lw_3d = 0.5 * (y_pred['flux_scalar_lw'] + net_flux_lw)
+    flux_up_lw_3d = 0.5 * (y_pred['flux_scalar_lw'] - net_flux_lw)
+
+    # Compute the new heating rate
+    hr_lw_3d = -scaling * net_flux_div_lw / np.diff(pressure_hl)
+
+    y_pred['flux_dn_lw_rescaled'] = flux_dn_lw_3d
+    y_pred['flux_up_lw_rescaled'] = flux_up_lw_3d
+    y_pred['heating_rate_lw_rescaled'] = hr_lw_3d
+
+    # Shortwave
+    # Total divergence from scalar fluxes: in the shortwave we assume the
+    # downward flux at TOA has no 3D component so the 3D effect on
+    # downward here is zero.  Therefore the 3D effect on net flux here is
+    # equal to minus the 3D effect on scalar flux here. At the surface, we
+    # know that net=down-up, scalar=down+up and albedo=up/down. Therefore
+    # net=scalar*(1-albedo)/(1+albedo). The total atmospheric flux
+    # divergence is the surface net flux minus the TOA net flux. Therefore
+    # the total atmospheric flux divergence is the sum of the scalar flux
+    # at TOA and the net flux (from the formula above) at the surface.
+    total_div_sw_from_scalar_flux = y_pred['flux_scalar_sw'].sel(half_level=-1) * \
+                                    (1 - sw_albedo) / (1 + sw_albedo) + \
+                                    y_pred['flux_scalar_sw'].sel(half_level=0)
+
+    # Scale the net flux divergence profile from the heating rates to
+    # match the total divergence from the scalar fluxes
+    sw_scaling = total_div_sw_from_scalar_flux / total_div_sw_from_hr
+
+    # If the heating rates, and hence the denominator in the previous
+    # formula, are very small then the scaling may be very large - cap it
+    # to lie between 0.5 and 2.
+    sw_scaling = np.maximum(0.5, np.minimum(sw_scaling, 2.0))
+
+    # Apply the scaling
+    net_flux_div_sw = net_flux_div_sw_from_hr * sw_scaling
+
+    # Compute the net flux profile by integrating its divergence, starting
+    # from the known value at the top (=minus the scalar flux )
+    net_flux_sw = -y_pred['flux_scalar_sw'].isel(half_level=0).values[:, np.newaxis] + \
+        np.concatenate([np.zeros((net_flux_div_sw.shape[0], 1)), net_flux_div_sw.cumsum(dim='level')], axis=1)
+
+    # Reconstruct the up and down from the scalar and the net
+    flux_dn_sw_3d = 0.5 * (y_pred['flux_scalar_sw'] + net_flux_sw)
+    flux_up_sw_3d = 0.5 * (y_pred['flux_scalar_sw'] - net_flux_sw)
+
+    # Compute the new heating rate
+    hr_sw_3d = -scaling * net_flux_div_sw / np.diff(pressure_hl)
+
+    y_pred['flux_dn_sw_rescaled'] = flux_dn_sw_3d
+    y_pred['flux_up_sw_rescaled'] = flux_up_sw_3d
+    y_pred['heating_rate_sw_rescaled'] = hr_sw_3d
+
+    return reverse_levels(y_pred)

@@ -10,6 +10,7 @@
 if [[ "$DRY_RUN" == "" ]]; then
 
 set -ex
+source ../tools/singularity/singexec.sh
 
 # Adjust this to the available cores in the job
 NCORES=32
@@ -23,7 +24,6 @@ singularity --version
 ROOT_DIR=$PBS_O_WORKDIR/..
 NB_DIR=$ROOT_DIR/notebooks
 RESULTS_DIR=$ROOT_DIR/results
-SIF_PATH=$ROOT_DIR/tools/singularity/image.sif
 
 RESULTS_NOTEBOOK=$RESULTS_DIR/notebooks/$JOB_NAME
 
@@ -152,11 +152,7 @@ for HIDDEN_SIZE in ${HIDDEN_SIZE_VALS[@]}; do
     out_arg="--output-dir=$TMPDIR"
   fi
 
-  singularity exec --containall \
-    -B $ROOT_DIR:$ROOT_DIR \
-    -B $TMPDIR:/tmp \
-    $SIF_PATH \
-    bash -c ". /miniconda/etc/profile.d/conda.sh && conda activate radiation && cd $NB_DIR && \
+singexec "cd $NB_DIR && \
       PYTHONHASHSEED=0 jupyter nbconvert --to html --execute ml.ipynb \
       $out_arg \
       --ExecutePreprocessor.timeout=86400 --ExecutePreprocessor.iopub_timeout=300"

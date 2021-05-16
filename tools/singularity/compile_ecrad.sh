@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-set -xe
+set -e
+source tools/singularity/singexec.sh
 
-ROOT_DIR=$(git rev-parse --show-toplevel)
-THIS_DIR="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+if [ ! -d tools ]; then
+    echo "Please run this script from the root folder"
+    exit 1
+fi
 
-echo "ROOT_DIR=$ROOT_DIR"
-
-singularity exec --containall \
-    -B $ROOT_DIR:$ROOT_DIR \
-    $THIS_DIR/image.sif \
-    bash -c "cd $ROOT_DIR/ecrad && make clean && make PROFILE=gfortran"
+singexec "cd ecrad &&
+    make clean &&
+    make PROFILE=gfortran"

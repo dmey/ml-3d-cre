@@ -7,6 +7,7 @@
 #PBS -e logs/
 
 set -ex
+source ../tools/singularity/singexec.sh
 
 # Adjust this to the available cores in the job
 NCORES=48
@@ -43,8 +44,6 @@ ROOT_DIR=$PBS_O_WORKDIR/..
 NB_DIR=$ROOT_DIR/notebooks
 RESULTS_DIR=$ROOT_DIR/results
 
-SIF_PATH=$ROOT_DIR/tools/singularity/image.sif
-
 rm -rf $RESULTS_DIR/job_stats_$JOB_NAME
 mkdir -p $RESULTS_DIR
 
@@ -71,11 +70,7 @@ export SINGULARITYENV_DROPOUT_RATIO_HIDDEN=$DROPOUT_RATIO_HIDDEN
 export SINGULARITYENV_N_HIDDEN_LAYERS=$N_HIDDEN_LAYERS
 export SINGULARITYENV_HIDDEN_SIZE=$HIDDEN_SIZE
 
-singularity exec --containall \
-  -B $ROOT_DIR:$ROOT_DIR \
-  -B $TMPDIR:/tmp \
-  $SIF_PATH \
-  bash -c ". /miniconda/etc/profile.d/conda.sh && conda activate radiation && cd $NB_DIR && \
+singexec "cd $NB_DIR && \
     PYTHONHASHSEED=0 jupyter nbconvert --to html --execute ml.ipynb \
     --ExecutePreprocessor.timeout=86400 --ExecutePreprocessor.iopub_timeout=300"
 
@@ -83,9 +78,4 @@ singularity exec --containall \
 export SINGULARITYENV_NCORES=$NCORES
 export SINGULARITYENV_GPU=$GPU
 
-singularity exec --containall \
-  -B $ROOT_DIR:$ROOT_DIR \
-  -B $TMPDIR:/tmp \
-  $SIF_PATH \
-  bash -c ". /miniconda/etc/profile.d/conda.sh && conda activate radiation && cd $ROOT_DIR && \
-    python tools/run_benchmarks.py > $RESULTS_DIR/benchmark_GPU=$GPU.txt"
+singexec "python tools/run_benchmarks.py > $RESULTS_DIR/benchmark_GPU=$GPU.txt"
