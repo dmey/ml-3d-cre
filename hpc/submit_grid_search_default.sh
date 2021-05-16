@@ -4,13 +4,13 @@
 #PBS -lselect=1:ncpus=32:mem=62gb
 #PBS -J 1-4050
 
-#PBS -o logs/
-#PBS -e logs/
+#PBS -o hpc/logs/
+#PBS -e hpc/logs/
 
 if [[ "$DRY_RUN" == "" ]]; then
 
 set -ex
-source ../tools/singularity/singexec.sh
+source $PBS_O_WORKDIR/tools/singularity/singexec.sh
 
 # Adjust this to the available cores in the job
 NCORES=32
@@ -21,7 +21,7 @@ date
 lscpu
 singularity --version
 
-ROOT_DIR=$PBS_O_WORKDIR/..
+ROOT_DIR=$PBS_O_WORKDIR
 NB_DIR=$ROOT_DIR/notebooks
 RESULTS_DIR=$ROOT_DIR/results
 
