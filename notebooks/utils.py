@@ -83,7 +83,7 @@ def train_test_split_dataset(ds: xr.Dataset, dim: str,
     return train, test
 
 def compute_augmented_dataset(ds_true, var_to_synth, synth_mul_factor, uniformization_ratio, stretch_factor, copula_type='gaussian', num_threads=None):
-    # If we just want to create duplicate profiles without chnaging any values we just copy the data n times...
+    # If we just want to create duplicate profiles without changing values we just copy the data n times...
     if var_to_synth == ['none']:
         return xr.concat([ds_true] * synth_mul_factor, dim='column')
     else:
