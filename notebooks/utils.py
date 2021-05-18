@@ -83,37 +83,41 @@ def train_test_split_dataset(ds: xr.Dataset, dim: str,
     return train, test
 
 def compute_augmented_dataset(ds_true, var_to_synth, synth_mul_factor, uniformization_ratio, stretch_factor, copula_type='gaussian', num_threads=None):
-    if synth_mul_factor == 0:
-        return ds_true.isel(column=slice(0,1))
-    
-    if copula_type == 'gaussian':
-        pyvinecopulib_ctrl = None
-    elif copula_type == 'tll':
-        pyvinecopulib_ctrl = pv.FitControlsVinecop(family_set=[pv.tll], trunc_lvl=50, num_threads=num_threads)
-    elif copula_type == 'parametric':
-        pyvinecopulib_ctrl = pv.FitControlsVinecop(family_set=pv.parametric, trunc_lvl=50, num_threads=num_threads)
+    # If we just want to create duplicate profiles without chnaging any values we just copy the data n times...
+    if var_to_synth == ['none']:
+        return xr.concat([ds_true] * synth_mul_factor, dim='column')
     else:
-        raise RuntimeError('Copula option not supported')
+        if synth_mul_factor == 0:
+            return ds_true.isel(column=slice(0,1))
+        
+        if copula_type == 'gaussian':
+            pyvinecopulib_ctrl = None
+        elif copula_type == 'tll':
+            pyvinecopulib_ctrl = pv.FitControlsVinecop(family_set=[pv.tll], trunc_lvl=50, num_threads=num_threads)
+        elif copula_type == 'parametric':
+            pyvinecopulib_ctrl = pv.FitControlsVinecop(family_set=pv.parametric, trunc_lvl=50, num_threads=num_threads)
+        else:
+            raise RuntimeError('Copula option not supported')
 
-    generator = syn.CopulaDataGenerator(verbose=True)
-    parameterizer = None
-    if pyvinecopulib_ctrl:
-        generator.fit(ds_true[var_to_synth], copula=syn.VineCopula(controls=pyvinecopulib_ctrl), parameterize_by=parameterizer)
-    else:
-        generator.fit(ds_true[var_to_synth], copula=syn.GaussianCopula(), parameterize_by=parameterizer)
+        generator = syn.CopulaDataGenerator(verbose=True)
+        parameterizer = None
+        if pyvinecopulib_ctrl:
+            generator.fit(ds_true[var_to_synth], copula=syn.VineCopula(controls=pyvinecopulib_ctrl), parameterize_by=parameterizer)
+        else:
+            generator.fit(ds_true[var_to_synth], copula=syn.GaussianCopula(), parameterize_by=parameterizer)
 
-    n_samples = len(ds_true.column) * synth_mul_factor
-    ds_synth_ext = generator.generate(n_samples=n_samples,
-        uniformization_ratio=uniformization_ratio, stretch_factor=stretch_factor)
+        n_samples = len(ds_true.column) * synth_mul_factor
+        ds_synth_ext = generator.generate(n_samples=n_samples,
+            uniformization_ratio=uniformization_ratio, stretch_factor=stretch_factor)
 
-    # Compute expanded dataset
-    ds_true_ext = xr.concat([ds_true] * synth_mul_factor, dim='column')
-    # Merge synthetic samples with extended dataset
-    ds_true_synth_ext = ds_true_ext.copy()
-    for name in ds_synth_ext:
-        assert name in list(ds_true_synth_ext)
-        ds_true_synth_ext[name] = ds_synth_ext[name]
-    return ds_true_synth_ext
+        # Compute expanded dataset
+        ds_true_ext = xr.concat([ds_true] * synth_mul_factor, dim='column')
+        # Merge synthetic samples with extended dataset
+        ds_true_synth_ext = ds_true_ext.copy()
+        for name in ds_synth_ext:
+            assert name in list(ds_true_synth_ext)
+            ds_true_synth_ext[name] = ds_synth_ext[name]
+        return ds_true_synth_ext
 
 def compute_optical_depth(ds: xr.Dataset) -> xr.DataArray:
     p_hl_a = ds['pressure_hl'].sel(half_level=slice(1,None))
