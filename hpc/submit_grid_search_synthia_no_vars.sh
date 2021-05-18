@@ -45,7 +45,7 @@ USE_HEATING_RATES_VALS=( 1 )
 case $JOB_NAME in
 
 
-mlp_synthia)
+mlp_synthia_no_vars)
   USE_DIFF_VALS=( 1 )
   ITERATION_VALS=( $(seq 0 9 ) )
   STORE_HTML=1

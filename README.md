@@ -43,6 +43,7 @@ To reproduce the results as described in the paper, run the following commands f
 ```
 qsub -v JOB_NAME=mlp_default ./submit_grid_search_default.sh
 qsub -v JOB_NAME=mlp_synthia ./submit_grid_search_synthia.sh
+qsub -v JOB_NAME=mlp_synthia_no_vars ./submit_grid_search_synthia.sh
 qsub submit_benchmark.sh
 ```
 
