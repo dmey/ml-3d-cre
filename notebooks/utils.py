@@ -84,12 +84,12 @@ def train_test_split_dataset(ds: xr.Dataset, dim: str,
 
 def compute_augmented_dataset(ds_true, var_to_synth, synth_mul_factor, uniformization_ratio, stretch_factor, copula_type='gaussian', num_threads=None):
     # If we just want to create duplicate profiles without changing values we just copy the data n times...
+    if synth_mul_factor == 0:
+        return ds_true.isel(column=slice(0,1))
+
     if var_to_synth == ['none']:
         return xr.concat([ds_true] * synth_mul_factor, dim='column')
     else:
-        if synth_mul_factor == 0:
-            return ds_true.isel(column=slice(0,1))
-        
         if copula_type == 'gaussian':
             pyvinecopulib_ctrl = None
         elif copula_type == 'tll':
