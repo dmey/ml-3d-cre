@@ -2,7 +2,7 @@
 
 #PBS -lwalltime=24:00:00
 #PBS -lselect=1:ncpus=32:mem=62gb
-#PBS -J 1-10
+#PBS -J 1-20
 
 #PBS -o logs/
 #PBS -e logs/
