@@ -2,7 +2,7 @@
 
 #PBS -lwalltime=24:00:00
 #PBS -lselect=1:ncpus=32:mem=62gb
-#PBS -J 1-50
+#PBS -J 1-10
 
 #PBS -o logs/
 #PBS -e logs/
@@ -47,7 +47,7 @@ case $JOB_NAME in
 
 mlp_synthia)
   USE_DIFF_VALS=( 1 )
-  ITERATION_VALS=( $(seq 0 49 ) )
+  ITERATION_VALS=( $(seq 0 9 ) )
   STORE_HTML=1
   COPULA_TYPE_VALS=( gaussian )
   SYNTH_MUL_FACTOR_VALS=( 0 9 )
