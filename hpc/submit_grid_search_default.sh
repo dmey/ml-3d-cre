@@ -154,6 +154,7 @@ for HIDDEN_SIZE in ${HIDDEN_SIZE_VALS[@]}; do
 
   singularity exec --containall \
     -B $ROOT_DIR:$ROOT_DIR \
+    -B $TMPDIR:$TMPDIR \
     -B $TMPDIR:/tmp \
     $SIF_PATH \
     bash -c ". /miniconda/etc/profile.d/conda.sh && conda activate radiation && df -h && cd $NB_DIR && \
