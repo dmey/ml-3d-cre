@@ -157,7 +157,7 @@ for HIDDEN_SIZE in ${HIDDEN_SIZE_VALS[@]}; do
     -B $TMPDIR:$TMPDIR \
     -B $TMPDIR:/tmp \
     $SIF_PATH \
-    bash -c ". /miniconda/etc/profile.d/conda.sh && conda activate radiation && df -h && cd $NB_DIR && \
+    bash -c ". /miniconda/etc/profile.d/conda.sh && conda activate radiation && df -ah && cd $NB_DIR && \
       PYTHONHASHSEED=0 jupyter nbconvert --to html --execute ml.ipynb \
       $out_arg \
       --ExecutePreprocessor.timeout=86400 --ExecutePreprocessor.iopub_timeout=300"
