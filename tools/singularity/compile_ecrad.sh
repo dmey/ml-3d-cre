@@ -2,8 +2,9 @@
 
 set -xe
 
-ROOT_DIR=$(git rev-parse --show-toplevel)
-THIS_DIR="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+# https://stackoverflow.com/a/246128
+local THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+local ROOT_DIR=$THIS_DIR/../..
 
 echo "ROOT_DIR=$ROOT_DIR"
 
